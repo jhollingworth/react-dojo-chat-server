@@ -1,0 +1,16 @@
+{
+  "name": "qubit-chat",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.8.8",
+    "socket.io": "^1.1.0",
+    "nodemon": "^1.2.1"
+  }
+}

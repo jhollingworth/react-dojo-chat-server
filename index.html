@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Qubit Chat</title>
+</head>
+<body>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  var host = location.origin.replace(/^http/, 'ws');
+  var socket = io.connect(host);
+  socket.on('news', function (data) {
+    console.log(data);
+    socket.emit('my other event', { my: 'data' });
+  });
+</script>
+</body>
+</html>
