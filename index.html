@@ -1,16 +1,51 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Qubit Chat</title>
+  <title>React dojo chat server</title>
 </head>
 <body>
+<h1>React dojo chat server</h1>
+
+
+<a href="/sow">State of world</a>
+
+
+<h2>Log</h2>
+
+<div id="log">
+</div>
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.js"></script>
 <script src="/socket.io/socket.io.js"></script>
 <script>
+  var log = [];
   var host = location.origin.replace(/^http/, 'ws');
   var socket = io.connect(host);
-  socket.on('news', function (data) {
-    console.log(data);
-    socket.emit('my other event', { my: 'data' });
+
+  function logMessage(event, data) {
+    console.log({
+      event: event,
+      data: data
+    });
+
+    log.push({
+      event: event,
+      data: data
+    });
+
+    d3.select("#log").selectAll(".message")
+      .data(log)
+      .enter().append("div")
+        .attr("class", "message")
+        .text(function(message) {
+          return message.event + " - " + JSON.stringify(message.data, null, 2);
+        });
+  }
+
+  ['message', 'channel:added', 'channel:joined', 'channel:left'].forEach(function(event) {
+    socket.on(event, function (data) {
+      logMessage(event, data);
+    });
   });
 </script>
 </body>
