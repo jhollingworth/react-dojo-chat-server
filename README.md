@@ -2,7 +2,7 @@
 
 A simple socket.io chat app we will use to build something with in react.
 
-The app knows about a number of channels, which have members and messages. 
+The app knows about a number of channels, which have members and messages.
 
 
 ##How do I?
@@ -15,16 +15,16 @@ The app knows about a number of channels, which have members and messages.
 
 ###Requests
 
-* ``message:send(channel, message``: Send a message
-* ``channel:join(channel, username)``: Join a channel
-* ``channel:leave(channel, username)``: Leave a channel
+* ``message:send#(message, channel)``: Send a message
+* ``channel:join#(username, channel)``: Join a channel
+* ``channel:leave#(username, channel)``: Leave a channel
 
 ###Events
 
 * ``message``: A message has been sent
-* ``channel:added``: A new channel has been added
-* ``channel:joined``: A user has joined a channel
 * ``channel:left``: A user has left a channel
+* ``channel:joined``: A user has joined a channel
+* ``channel:created``: A new channel has been created
 
 ##HTTP Endpoints
 

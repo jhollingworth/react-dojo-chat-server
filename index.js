@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var util = require('util');
+var redis = require('./redis');
 var app = require('express')();
 var morgan = require('morgan');
 var port = process.env.PORT || 5000;
@@ -13,30 +14,36 @@ server.listen(port);
 app.use(morgan('dev'));
 app.use(bodyParser());
 
-app.get('/', function (req, res) {
+app.get('/', function(req, res) {
   res.sendFile(__dirname + '/index.html');
 });
 
 app.get('/sow', function(req, res) {
-  res.send(channels.sow());
+  channels.all().then(function(sow) {
+    res.send(sow);
+  });
 });
 
 app.post('/:channel/messages', function(req, res) {
-  addMessage(req.params.channel, {
+  var message = {
     text: req.body.text,
     username: req.body.username,
     timestamp: new Date(req.body.timestamp)
-  });
+  };
+
+  channels.addMessage(message, req.params.channel);
 
   res.status(200).end();
 });
 
 app.post('/slack', function(req, res) {
-  addMessage(req.body.channel_name, {
+  var message = {
     text: req.body.text,
     username: req.body.user_name,
     timestamp: new Date(parseInt(req.body.timestamp) * 1000)
-  });
+  };
+
+  channels.addMessage(message, req.body.channel_name);
 
   res.status(200).end();
 });
@@ -45,37 +52,34 @@ channels.on('*', function() {
   console.log.apply(console, _.union([this.event], _.toArray(arguments)));
 });
 
-io.on('connection', function (socket) {
-  socket.emit('sow', channels.sow());
-
-  socket.on('message:send', function(channel, message) {
-    channel.get(channel).messages.push(message);
+io.on('connection', function(socket) {
+  channels.all().then(function(sow) {
+    socket.emit('sow', sow);
   });
 
-  socket.on('channel:join', function(channel, username) {
-    channels.get(channel).join(username);
+  socket.on('message:send', function(message, channel) {
+    channels.addMessage(message, channel);
   });
 
-  socket.on('channel:leave', function(channel, username) {
-    channels.get(channel).leave(username);
+  socket.on('channel:join', function(username, channel) {
+    channels.addChannelMember(username, channel);
   });
 
-  channels.on('*', function(channel) {
+  socket.on('channel:leave', function(username, channel) {
+    channels.removeChannelMember(username, channel)
+  });
+
+  channels.on('*', function() {
     var args = _.toArray(arguments);
     args.unshift(this.event);
 
-    socket.emit.apply(socket,  args);
+    socket.emit.apply(socket, args);
   });
 });
-
-function addMessage(channel, message) {
-  channels.get(channel).messages.push(message);
-}
-
 // setInterval(function() {
-//   channels.get('foo').messages.push({
+//   channels.addMessage({
 //     text: 'bar',
 //     username: 'james',
 //     timestamp: new Date()
-//   });
+//   }, 'foo');
 // }, 1000);

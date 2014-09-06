@@ -42,7 +42,7 @@
         });
   }
 
-  ['message', 'channel:added', 'channel:joined', 'channel:left'].forEach(function(event) {
+  ['sow', 'message', 'channel:added', 'channel:joined', 'channel:left'].forEach(function(event) {
     socket.on(event, function (data) {
       logMessage(event, data);
     });
