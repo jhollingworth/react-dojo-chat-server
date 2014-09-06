@@ -8,5 +8,8 @@ start: bootstrap
 deploy:
 	@git push -f heroku master;
 
-bootstrap: package.json
+bootstrap: package.json security.json
 	@npm install;
+
+security.json:
+	@cp security.json.template security.json

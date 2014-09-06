@@ -1,3 +1,4 @@
+var fs = require('fs');
 var _ = require('lodash');
 var util = require('util');
 var redis = require('./redis');
@@ -8,14 +9,26 @@ var bodyParser = require('body-parser');
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
 var channels = require('./channels');
+var security = require('./security.json');
+
 
 server.listen(port);
 
 app.use(morgan('dev'));
 app.use(bodyParser());
+app.use(function(req, res, next) {
+  if (validKey(req.query.key)) {
+    next();
+  } else {
+    res.status(401).end();
+  }
+});
 
 app.get('/', function(req, res) {
-  res.sendFile(__dirname + '/index.html');
+  var index = fs.readFileSync(__dirname + '/index.html', 'utf-8').replace("{{key}}", security.keys[0]);
+
+  res.set('Content-Type', 'text/html');
+  res.send(index);
 });
 
 app.get('/sow', function(req, res) {
@@ -53,6 +66,11 @@ channels.on('*', function() {
 });
 
 io.on('connection', function(socket) {
+  console.log(socket)
+  if (!validUrl(socket.handshake.headers.referer)) {
+    socket.disconnect('unauthorized');
+  }
+
   channels.all().then(function(sow) {
     socket.emit('sow', sow);
   });
@@ -76,6 +94,23 @@ io.on('connection', function(socket) {
     socket.emit.apply(socket, args);
   });
 });
+
+
+function validUrl(url) {
+  var match = new RegExp(/key=(.*)/).exec(url);
+
+  return match && validKey(match[1]);
+}
+
+function validKey(key) {
+  var valid = key && security.keys.indexOf(key.toString().toLowerCase()) !== -1;
+
+  if (!valid) {
+    console.error("Invalid security key", key);
+  }
+
+  return valid;
+}
 // setInterval(function() {
 //   channels.addMessage({
 //     text: 'bar',
