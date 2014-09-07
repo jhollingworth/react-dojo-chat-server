@@ -13,13 +13,13 @@ The app knows about a number of channels, which have members and messages.
 
 ##Socket.io
 
-###Requests
+###Client events
 
-* ``message:send#(message, channel)``: Send a message
-* ``channel:join#(username, channel)``: Join a channel
-* ``channel:leave#(username, channel)``: Leave a channel
+* ``message#(message, channel)``: Send a message
+* ``channel:joined#(username, channel)``: Join a channel
+* ``channel:left#(username, channel)``: Leave a channel
 
-###Events
+###Server events
 
 * ``message``: A message has been sent
 * ``channel:left``: A user has left a channel

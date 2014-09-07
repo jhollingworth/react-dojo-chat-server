@@ -20,7 +20,7 @@
 <script>
 
   var log = [];
-  var host = location.origin.replace(/^http/, 'ws');
+  var host = location.origin.replace(/^http/, 'ws') + "?key={{key}}";
   var socket = io.connect(host);
 
   function logMessage(event, data) {

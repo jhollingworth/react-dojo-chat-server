@@ -1,6 +1,7 @@
 var fs = require('fs');
 var _ = require('lodash');
 var util = require('util');
+var uuid = require('uuid').v1;
 var redis = require('./redis');
 var app = require('express')();
 var morgan = require('morgan');
@@ -11,6 +12,7 @@ var io = require('socket.io')(server);
 var channels = require('./channels');
 var security = require('./security.json');
 
+console.log("keys", security.keys);
 
 server.listen(port);
 
@@ -26,7 +28,6 @@ app.use(function(req, res, next) {
 
 app.get('/', function(req, res) {
   var index = fs.readFileSync(__dirname + '/index.html', 'utf-8').replace("{{key}}", security.keys[0]);
-
   res.set('Content-Type', 'text/html');
   res.send(index);
 });
@@ -39,6 +40,7 @@ app.get('/sow', function(req, res) {
 
 app.post('/:channel/messages', function(req, res) {
   var message = {
+    id: uuid(),
     text: req.body.text,
     username: req.body.username,
     timestamp: new Date(req.body.timestamp)
@@ -51,6 +53,7 @@ app.post('/:channel/messages', function(req, res) {
 
 app.post('/slack', function(req, res) {
   var message = {
+    id: uuid(),
     text: req.body.text,
     username: req.body.user_name,
     timestamp: new Date(parseInt(req.body.timestamp) * 1000)
@@ -66,8 +69,7 @@ channels.on('*', function() {
 });
 
 io.on('connection', function(socket) {
-  console.log(socket)
-  if (!validUrl(socket.handshake.headers.referer)) {
+  if (!validUrl(socket.client.request.url)) {
     socket.disconnect('unauthorized');
   }
 
@@ -75,29 +77,29 @@ io.on('connection', function(socket) {
     socket.emit('sow', sow);
   });
 
-  socket.on('message:send', function(message, channel) {
+  socket.on('message', function(message, channel) {
+    message.id = uuid();
     channels.addMessage(message, channel);
   });
 
-  socket.on('channel:join', function(username, channel) {
-    channels.addChannelMember(username, channel);
+  socket.on('channel:left', function(username, channel) {
+    channels.removeChannelMember(username, channel)
   });
 
-  socket.on('channel:leave', function(username, channel) {
-    channels.removeChannelMember(username, channel)
+  socket.on('channel:joined', function(username, channel) {
+    channels.addChannelMember(username, channel);
   });
 
   channels.on('*', function() {
     var args = _.toArray(arguments);
     args.unshift(this.event);
-
     socket.emit.apply(socket, args);
   });
 });
 
 
 function validUrl(url) {
-  var match = new RegExp(/key=(.*)/).exec(url);
+  var match = new RegExp(/key=(.*?)&/).exec(url);
 
   return match && validKey(match[1]);
 }
@@ -106,7 +108,7 @@ function validKey(key) {
   var valid = key && security.keys.indexOf(key.toString().toLowerCase()) !== -1;
 
   if (!valid) {
-    console.error("Invalid security key", key);
+    console.error("Invalid security key", key, '\nValid keys:' + security.keys.join(', '));
   }
 
   return valid;

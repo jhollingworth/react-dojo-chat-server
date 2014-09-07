@@ -17,6 +17,8 @@
     "eventemitter2": "^0.4.14",
     "array": "^0.4.3",
     "redis": "^0.12.1",
-    "bluebird": "^2.3.2"
+    "bluebird": "^2.3.2",
+    "ramda": "^0.4.3",
+    "uuid": "^1.4.1"
   }
 }
