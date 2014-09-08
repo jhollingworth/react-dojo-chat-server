@@ -26,6 +26,8 @@ app.use(function(req, res, next) {
   }
 });
 
+console.log("Chat server: http://localhost:" + port);
+
 app.get('/', function(req, res) {
   var index = fs.readFileSync(__dirname + '/index.html', 'utf-8').replace("{{key}}", security.keys[0]);
   res.set('Content-Type', 'text/html');
@@ -37,6 +39,12 @@ app.get('/sow', function(req, res) {
     res.send(sow);
   });
 });
+
+app.get('/flushall', function(req, res) {
+  redis.flushall().then(function() {
+    res.send("Messages deleted");
+  });
+})
 
 app.post('/:channel/messages', function(req, res) {
   var message = {

@@ -1,6 +1,6 @@
 var client = createClient();
 var Promise = require('bluebird');
-var commands = ['lrange', 'sadd', 'smembers', 'rpush', 'srem', 'sismember'];
+var commands = ['lrange', 'sadd', 'smembers', 'rpush', 'srem', 'sismember', 'flushall'];
 
 commands.forEach(function(command) {
   client[command] = Promise.promisify(client[command]);
